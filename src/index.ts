@@ -1,12 +1,19 @@
-import {HttpProvider} from '@polkadot/rpc-provider/http';
+import {WsProvider} from '@polkadot/rpc-provider';
+import { Keyring } from '@polkadot/keyring';
 var dsBridge = require("dsbridge")
 
-export class ATokenProvider extends HttpProvider {
-    send(method: string, params: any[]): Promise<any> {
-        console.log("method:"+method);
-        console.log("params:")
+interface SubscriptionHandler {
+    callback: (error: Error | null, result: any) => void;
+    type: string;
+}
+
+export default class ATokenProvider extends WsProvider {
+
+    send(method: string, params: any[], subscription?: SubscriptionHandler): Promise<any> {
+        console.log("----method:"+method);
+        console.log("----params:")
         console.log(params);
-        return super.send(method, params);
+        return super.send(method, params, subscription);
     }
 }
 
@@ -60,9 +67,35 @@ PolkadotDappHelper.prototype.callNativeMethod = function (method, id, params, ca
  * @param {function} callback
  */
 PolkadotDappHelper.prototype.requestAccounts = function (coinType, callback) {
-    let _this = this;
-    _this.callNativeMethod('requestAccounts', 0, {'coinType': coinType}, callback);
+    this.callNativeMethod('requestAccounts', 0, {'coinType': coinType}, callback);
 }
+
+/**
+ * Request Keyring Pair
+ * @param {function} callback
+ */
+PolkadotDappHelper.prototype.requestKeyringPair = function (callback) {
+    this.callNativeMethod('requestKeyring', 0, {}, function (error, result) {
+        if (!error) {
+            const keyring = new Keyring({ ss58Format: 42, type: 'sr25519' });
+            const keyringPair = keyring.createFromUri(result['result']);
+            callback(null, keyringPair);
+        } else {
+            callback(error, null);
+        }
+    });
+}
+
+/**
+ * Send Transaction
+ * @param {object} params
+ * examples: {'coinType':'DOT/KSM','actionType':'TRANSFER/CONTRIBUTE/STAKING/WITHDRAW','amount':'1','estimatedFee':'0.05','paraId':'1','projectName':'Karura'}
+ * @param {function} callback
+ */
+PolkadotDappHelper.prototype.sendTransaction = function (params, callback) {
+    this.callNativeMethod('sendTransaction', 1, params, callback);
+}
+
 
 /**
  * Generate callback body
@@ -77,9 +110,8 @@ var generateCallbackBody = function (id,response) {
     };
 }
 const helper = new PolkadotDappHelper();
-const provider = new ATokenProvider("https://rpc.polkadot.io/");
 window.polkadotHelper = helper;
-window.polkadotProvider = provider;
+
 
 
 

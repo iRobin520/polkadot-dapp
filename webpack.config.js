@@ -4,7 +4,11 @@ const config = {
   entry: "./src/index.ts",
   output: {
     path: path.resolve(__dirname, "dist"),
-    filename: "polkadot-dapp.min.js"
+    filename: "polkadot-dapp.min.js",
+    library: 'ATokenProvider',
+    libraryTarget: 'umd',
+    libraryExport: 'default',
+    umdNamedDefine: true
     // filename: '[name].min.js',
   },
   resolve: {

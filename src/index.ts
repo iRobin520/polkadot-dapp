@@ -45,11 +45,16 @@ PolkadotDappHelper.prototype.callNativeMethod = function (method, id, params, ca
             if (response) {
                 let data = JSON.parse(response);
                 let result = data['result'];
-                if (method === 'requestAccounts') {
-                    _this.coinType = params['coinType'];
-                    _this.address = result ? result : null;
+                let error = data['error'];
+                if (!error && result) {
+                    if (method === 'requestAccounts') {
+                        _this.coinType = params['coinType'];
+                        _this.address = result ? result : null;
+                    }
+                    callbackBody = generateCallbackBody(id,result);
+                } else {
+                    errMsg = error ?? 'callback error';
                 }
-                callbackBody = generateCallbackBody(id,result);
             } else {
                 errMsg = 'there is no response from callback';
             }
@@ -75,7 +80,7 @@ PolkadotDappHelper.prototype.requestAccounts = function (coinType, callback) {
  * @param {function} callback
  */
 PolkadotDappHelper.prototype.requestKeyringPair = function (callback) {
-    this.callNativeMethod('requestKeyring', 0, {}, function (error, result) {
+    this.callNativeMethod('requestKeyring', 0, {}, function (error,result) {
         if (!error) {
             const keyring = new Keyring({ ss58Format: 42, type: 'sr25519' });
             const keyringPair = keyring.createFromUri(result['result']);

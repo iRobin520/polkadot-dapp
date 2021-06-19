@@ -76,6 +76,15 @@ PolkadotDappHelper.prototype.requestAccounts = function (coinType, callback) {
 }
 
 /**
+ * Request asset address of all accounts in the wallet
+ * @param {string} coinType
+ * @param {function} callback
+ */
+PolkadotDappHelper.prototype.requestAllAccounts = function (coinType, callback) {
+    this.callNativeMethod('requestAllAccounts', 0, {'coinType': coinType}, callback);
+}
+
+/**
  * Request Keyring Pair
  * @param {function} callback
  */
